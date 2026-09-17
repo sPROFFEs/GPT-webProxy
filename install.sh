@@ -24,9 +24,18 @@ fi
 echo "Using Python: $("$PYTHON" --version 2>&1) ($PYTHON)"
 mkdir -p "$PREFIX" "$BIN_DIR"
 
-if [ ! -d "$PREFIX/venv" ]; then
+if [ ! -d "$PREFIX/venv" ] || [ ! -f "$PREFIX/venv/bin/python" ]; then
   echo "Creating virtualenv at $PREFIX/venv..."
+  rm -rf "$PREFIX/venv"
   "$PYTHON" -m venv "$PREFIX/venv"
+fi
+
+# Ensure pip is present in the virtualenv
+if ! "$PREFIX/venv/bin/python" -m pip --version >/dev/null 2>&1; then
+  echo "Bootstrapping pip inside venv..."
+  "$PREFIX/venv/bin/python" -m ensurepip --upgrade 2>/dev/null || {
+    curl -fsSL https://bootstrap.pypa.io/get-pip.py | "$PREFIX/venv/bin/python" - --no-warn-script-location --quiet
+  }
 fi
 
 echo "Installing/upgrading dependencies..."

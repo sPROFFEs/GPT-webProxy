@@ -14,7 +14,10 @@ keywords = [
   "chatgpt", "chatgpt-web", "openai-compatible", "api-proxy",
   "chatgpt-proxy", "llm-proxy", "mcp", "developer-tools", "workspace", "coding-agent"
 ]
-dependencies = ["chatgpt-web2api>=0.2.0,<0.3.0", "websocket-client>=1.8,<2"]
+dependencies = [
+  "chatgpt-web2api @ git+https://github.com/Octo-Lex/ChatGPT-Web2API.git@v0.2.0",
+  "websocket-client>=1.8,<2",
+]
 
 [project.scripts]
 chatgptproxy = "chatgptproxy.cli:main"
@@ -23,6 +26,9 @@ chatgptproxy = "chatgptproxy.cli:main"
 Homepage = "https://github.com/sPROFFEs/GPT-webProxy"
 Repository = "https://github.com/sPROFFEs/GPT-webProxy"
 Upstream = "https://github.com/Octo-Lex/ChatGPT-Web2API"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/chatgptproxy"]
