@@ -16,11 +16,29 @@ from .profiles import write_runtime_config
 
 
 def upstream_binary() -> str | None:
-    return shutil.which("chatgpt-web2api")
+    found = shutil.which("chatgpt-web2api")
+    if found:
+        return found
+    venv_bin = Path(sys.executable).parent / ("chatgpt-web2api.exe" if os.name == "nt" else "chatgpt-web2api")
+    if venv_bin.exists() and os.access(venv_bin, os.X_OK):
+        return str(venv_bin)
+    prefix_bin = Path(sys.prefix) / "bin" / ("chatgpt-web2api.exe" if os.name == "nt" else "chatgpt-web2api")
+    if prefix_bin.exists() and os.access(prefix_bin, os.X_OK):
+        return str(prefix_bin)
+    return None
 
 
 def upstream_mcp_binary() -> str | None:
-    return shutil.which("chatgpt-web2api-mcp")
+    found = shutil.which("chatgpt-web2api-mcp")
+    if found:
+        return found
+    venv_bin = Path(sys.executable).parent / ("chatgpt-web2api-mcp.exe" if os.name == "nt" else "chatgpt-web2api-mcp")
+    if venv_bin.exists() and os.access(venv_bin, os.X_OK):
+        return str(venv_bin)
+    prefix_bin = Path(sys.prefix) / "bin" / ("chatgpt-web2api-mcp.exe" if os.name == "nt" else "chatgpt-web2api-mcp")
+    if prefix_bin.exists() and os.access(prefix_bin, os.X_OK):
+        return str(prefix_bin)
+    return None
 
 
 def pid_path(profile_name: str) -> Path:
@@ -41,6 +59,9 @@ def supervisor_pid_path(profile_name: str) -> Path:
 
 def _env(profile: dict[str, Any]) -> dict[str, str]:
     env = os.environ.copy()
+    venv_dir = str(Path(sys.executable).parent)
+    if venv_dir not in env.get("PATH", "").split(os.pathsep):
+        env["PATH"] = f"{venv_dir}{os.pathsep}{env.get('PATH', '')}"
     env["W2A_LOG_LEVEL"] = str(profile.get("log_level", "INFO"))
     if profile.get("diagnose"):
         env["W2A_DIAGNOSE"] = "1"

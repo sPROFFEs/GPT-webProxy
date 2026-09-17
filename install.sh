@@ -58,6 +58,21 @@ else
 fi
 
 ln -sf "$PREFIX/venv/bin/chatgptproxy" "$BIN_DIR/chatgptproxy"
+if [ -f "$PREFIX/venv/bin/chatgpt-web2api" ]; then
+  ln -sf "$PREFIX/venv/bin/chatgpt-web2api" "$BIN_DIR/chatgpt-web2api"
+fi
+if [ -f "$PREFIX/venv/bin/chatgpt-web2api-mcp" ]; then
+  ln -sf "$PREFIX/venv/bin/chatgpt-web2api-mcp" "$BIN_DIR/chatgpt-web2api-mcp"
+fi
+
+# Check for Chrome / Chromium availability
+CHROME_FOUND=""
+for browser in google-chrome google-chrome-stable chromium chromium-browser chrome; do
+  if command -v "$browser" >/dev/null 2>&1; then
+    CHROME_FOUND="$browser"
+    break
+  fi
+done
 
 # Add $BIN_DIR to shell config if not already in PATH
 PATH_BLOCK="export PATH=\"$BIN_DIR:\$PATH\""
@@ -79,6 +94,23 @@ echo "============================================================"
 echo " chatgptproxy installed successfully!"
 echo " Location: $BIN_DIR/chatgptproxy"
 echo "============================================================"
+
+if [ -z "$CHROME_FOUND" ]; then
+  echo ""
+  echo "Note: Chrome or Chromium was not detected on PATH."
+  echo "ChatGPT Web requires Chrome/Chromium for browser sessions."
+  if command -v apt-get >/dev/null 2>&1; then
+    echo "To install Chromium on Debian/Ubuntu/Kali/Parrot:"
+    echo "  sudo apt-get update && sudo apt-get install -y chromium"
+  elif command -v dnf >/dev/null 2>&1; then
+    echo "To install Chromium on Fedora/RHEL:"
+    echo "  sudo dnf install -y chromium"
+  elif command -v pacman >/dev/null 2>&1; then
+    echo "To install Chromium on Arch:"
+    echo "  sudo pacman -S chromium"
+  fi
+fi
+
 echo ""
 echo "Quick start:"
 echo "  export PATH=\"$BIN_DIR:\$PATH\""
