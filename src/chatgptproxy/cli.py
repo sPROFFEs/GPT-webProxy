@@ -16,6 +16,7 @@ from .profiles import (
     default_profile,
     delete_profile,
     ensure_default_profile,
+    find_chrome_binary,
     list_profiles,
     load_profile,
     save_profile,
@@ -469,7 +470,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     checks.append(("chatgpt-web2api", bool(up), up or "not found on PATH"))
     mcp = upstream_mcp_binary()
     checks.append(("chatgpt-web2api-mcp", bool(mcp), mcp or "not found on PATH"))
-    chrome = next((shutil.which(x) for x in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome") if shutil.which(x)), None)
+    chrome = find_chrome_binary(p.get("chrome_path"))
     checks.append(("Chrome/Chromium", bool(chrome), chrome or "not found on PATH (upstream may still auto-detect GUI installs)"))
     try:
         validate_workspace_profile(p)

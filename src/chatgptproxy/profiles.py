@@ -4,6 +4,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -156,13 +157,48 @@ def clone_profile(source: str, target: str) -> dict[str, Any]:
     return clone
 
 
+def find_chrome_binary(explicit: str | None = None) -> str | None:
+    if explicit and explicit != "auto":
+        resolved = shutil.which(explicit) or explicit
+        if Path(resolved).exists():
+            return str(Path(resolved).resolve())
+        return explicit
+    # Search common system names and paths
+    for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"):
+        found = shutil.which(name)
+        if found:
+            return found
+    for path in (
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+        "/snap/bin/chromium",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ):
+        if Path(path).exists() and os.access(path, os.X_OK):
+            return path
+    # Check local m365proxy / playwright browser installations if present
+    m365_browsers = Path.home() / ".local" / "share" / "m365proxy" / "browsers"
+    if m365_browsers.exists():
+        for candidate in sorted(m365_browsers.glob("**/chrome"), reverse=True):
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return str(candidate.resolve())
+    playwright_dir = Path.home() / ".cache" / "ms-playwright"
+    if playwright_dir.exists():
+        for candidate in sorted(playwright_dir.glob("**/chrome"), reverse=True):
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return str(candidate.resolve())
+    return None
+
+
 def upstream_config(profile: dict[str, Any]) -> dict[str, Any]:
     name = validate_name(str(profile["name"]))
-    return {
+    cfg: dict[str, Any] = {
         "port": int(profile.get("upstream_port", 13335)),
         "host": str(profile.get("upstream_host", "127.0.0.1")),
         "cdp_port": int(profile["cdp_port"]),
-        "chrome_path": "auto",
         "user_data_dir": str(browser_dir(name)),
         "headless": bool(profile.get("headless", False)),
         "default_model": str(profile.get("default_model", "auto")),
@@ -173,6 +209,10 @@ def upstream_config(profile: dict[str, Any]) -> dict[str, Any]:
         "request_timeout": int(profile.get("request_timeout", 120)),
         "log_level": str(profile.get("log_level", "INFO")),
     }
+    chrome_bin = find_chrome_binary(profile.get("chrome_path"))
+    if chrome_bin:
+        cfg["chrome_path"] = chrome_bin
+    return cfg
 
 
 def write_runtime_config(profile: dict[str, Any]) -> Path:
