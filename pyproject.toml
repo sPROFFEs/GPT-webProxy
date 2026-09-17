@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chatgptproxy"
+version = "0.3.0"
+description = "Managed OpenAI-compatible ChatGPT Web gateway with profiles, session lifecycle and local workspace modes"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "sPROFFEs"}]
+keywords = [
+  "chatgpt", "chatgpt-web", "openai-compatible", "api-proxy",
+  "chatgpt-proxy", "llm-proxy", "mcp", "developer-tools", "workspace", "coding-agent"
+]
+dependencies = ["chatgpt-web2api>=0.2.0,<0.3.0", "websocket-client>=1.8,<2"]
+
+[project.scripts]
+chatgptproxy = "chatgptproxy.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/sPROFFEs/GPT-webProxy"
+Repository = "https://github.com/sPROFFEs/GPT-webProxy"
+Upstream = "https://github.com/Octo-Lex/ChatGPT-Web2API"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chatgptproxy"]
