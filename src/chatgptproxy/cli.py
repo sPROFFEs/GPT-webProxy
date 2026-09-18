@@ -573,7 +573,21 @@ def cmd_auth(args: argparse.Namespace) -> int:
         print_json(state)
         return 0 if state.get("auth_state") in {"READY", "REFRESH_SOON"} else 1
     if args.auth_cmd == "login":
-        value = cdp.open_chatgpt(int(p["cdp_port"]))
+        upstream_pid = read_pid(pid_path(name))
+        if not upstream_pid or not process_alive(upstream_pid):
+            print(f"Starting proxy stack for profile '{name}'...", file=sys.stderr)
+            start_background(p)
+            time.sleep(2)
+        value = {}
+        deadline = time.monotonic() + 15.0
+        while time.monotonic() < deadline:
+            try:
+                value = cdp.open_chatgpt(int(p["cdp_port"]))
+                break
+            except cdp.CDPError:
+                time.sleep(1.0)
+        if not value:
+            value = cdp.open_chatgpt(int(p["cdp_port"]))
         state = load_state(name)
         state["auth_state"] = "NEEDS_LOGIN"
         state["needs_login"] = True
