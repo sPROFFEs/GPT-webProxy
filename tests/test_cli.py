@@ -30,6 +30,11 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.mode, "full_workspace")
         self.assertEqual(args.workspace, "/tmp/project")
 
+    def test_auth_login_parse(self):
+        args = build_parser().parse_args(["auth", "login", "demo"])
+        self.assertEqual(args.auth_cmd, "login")
+        self.assertEqual(args.profile, "demo")
+
     def test_workspace_test_parse(self):
         args = build_parser().parse_args(["workspace", "test", "demo"])
         self.assertEqual(args.workspace_cmd, "test")

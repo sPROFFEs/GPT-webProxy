@@ -25,7 +25,10 @@ from .session import check as session_check
 from .session_state import format_duration, iso_now, load_state, save_state
 from .supervisor import run_loop
 from .upstream import (
+    gateway_pid_path,
+    mcp_pid_path,
     models,
+    pid_path,
     print_json,
     process_alive,
     read_pid,
