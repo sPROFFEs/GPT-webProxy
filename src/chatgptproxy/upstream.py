@@ -156,6 +156,16 @@ def read_pid(path: Path) -> int | None:
 def process_alive(pid: int) -> bool:
     try:
         os.kill(pid, 0)
+        if os.name != "nt" and Path(f"/proc/{pid}/status").exists():
+            try:
+                status_text = Path(f"/proc/{pid}/status").read_text(encoding="utf-8", errors="ignore")
+                for line in status_text.splitlines():
+                    if line.startswith("State:"):
+                        state = line.split(":", 1)[1].strip().upper()
+                        if state.startswith("Z"):
+                            return False
+            except OSError:
+                return False
         return True
     except OSError:
         return False
@@ -186,6 +196,9 @@ def _wait_dead(pid: int, timeout: float = 8.0) -> None:
 
 def start_rest_process(profile: dict[str, Any]) -> int:
     name = str(profile["name"])
+    existing = read_pid(pid_path(name))
+    if existing and process_alive(existing):
+        return existing
     rest_log = logs_dir() / f"{name}.upstream.log"
     rest = _popen_detached(rest_command(profile), rest_log, _env(profile))
     pid_path(name).write_text(str(rest.pid), encoding="ascii")
@@ -250,13 +263,6 @@ def start_background(
 ) -> dict[str, int]:
     ensure_dirs()
     name = str(profile["name"])
-    existing = read_pid(pid_path(name))
-    if existing and process_alive(existing):
-        raise RuntimeError(f"profile {name} already appears to be running (upstream pid {existing})")
-    existing_gateway = read_pid(gateway_pid_path(name))
-    if existing_gateway and process_alive(existing_gateway):
-        raise RuntimeError(f"profile {name} gateway already appears to be running (pid {existing_gateway})")
-
     result = {"upstream_pid": start_rest_process(profile)}
     try:
         result["gateway_pid"] = start_gateway_process(profile)
